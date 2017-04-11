@@ -948,7 +948,7 @@ void TilesetDock::replaceSelectedObjectsTile(Tile *tile)
     if (!mMapDocument)
         return;
 
-    QList<MapObject *> selectedObjects = mMapDocument->selectedObjects();
+   auto &selectedObjects = mMapDocument->selectedObjects();
 
     if (selectedObjects.isEmpty())
         return;
