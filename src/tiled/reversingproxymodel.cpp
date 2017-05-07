@@ -28,13 +28,13 @@ namespace Tiled {
 namespace Internal {
 
 // Stupid hack needed because createIndex is protected
-class FriendModel : public QAbstractItemModel
+class FriendModel : public QSortFilterProxyModel
 {
     friend class ReversingProxyModel;
 };
 
 ReversingProxyModel::ReversingProxyModel(QObject *parent)
-    : QAbstractProxyModel(parent)
+    : QSortFilterProxyModel(parent)
 {
 }
 

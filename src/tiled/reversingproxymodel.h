@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <QAbstractProxyModel>
+#include <QSortFilterProxyModel>
 
 namespace Tiled {
 namespace Internal {
@@ -28,7 +28,7 @@ namespace Internal {
 /**
  * Displays the source model "upside down".
  */
-class ReversingProxyModel : public QAbstractProxyModel
+class ReversingProxyModel : public QSortFilterProxyModel
 {
     Q_OBJECT
 
@@ -49,7 +49,7 @@ public:
     // QAbstractProxyModel interface
     QModelIndex mapToSource(const QModelIndex &proxyIndex) const override;
     QModelIndex mapFromSource(const QModelIndex &sourceIndex) const override;
-    void setSourceModel(QAbstractItemModel *sourceModel) override;
+    void setSourceModel(QAbstractItemModel *sourceModel);
 
 private slots:
     void sourceRowsAboutToBeInserted(const QModelIndex &parent, int start, int end);
