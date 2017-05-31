@@ -28,7 +28,6 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <QDebug>
 #include "mapreader.h"
 
 #include "compression.h"
