@@ -264,7 +264,8 @@ void AbstractObjectTool::showContextMenu(MapObjectItem *clickedObjectItem,
                                                     isResizedTileObject));
     }
 
-    auto saveAsTemplateAction = menu.addAction(tr("Save As A Template"), this, SLOT(saveTemplate()));
+    menu.addAction(tr("Save As A Template"), this, SLOT(saveTemplate()));
+//    auto saveAsTemplateAction = menu.addAction(tr("Save As A Template"), this, SLOT(saveTemplate()));
 //    saveAsTemplateAction->setEnabled(selectedObjects.size() == 1);
 
     menu.addSeparator();

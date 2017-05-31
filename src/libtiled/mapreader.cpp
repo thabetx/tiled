@@ -178,7 +178,7 @@ TemplateGroup *MapReaderPrivate::readTemplateGroup(QIODevice *device, const QStr
 {
     mError.clear();
     mPath = path;
-    TemplateGroup * templateGroup;
+    TemplateGroup *templateGroup = new TemplateGroup();
 
     xml.setDevice(device);
 
@@ -899,7 +899,7 @@ MapObject *MapReaderPrivate::readTemplate()
     Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("template"));
     const QXmlStreamAttributes atts = xml.attributes();
     const QString name = atts.value(QLatin1String("name")).toString();
-    const unsigned gid = atts.value(QLatin1String("gid")).toUInt();
+//    const unsigned gid = atts.value(QLatin1String("gid")).toUInt();
     const qreal width = atts.value(QLatin1String("width")).toDouble();
     const qreal height = atts.value(QLatin1String("height")).toDouble();
     const QString type = atts.value(QLatin1String("type")).toString();
