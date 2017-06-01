@@ -655,7 +655,6 @@ void MapWriterPrivate::writeObject(QXmlStreamWriter &w,
     w.writeEndElement();
 }
 
-// TODO: Extract functions from writeObject to decrease code duplication
 void MapWriterPrivate::writeTemplate(QXmlStreamWriter &w,
                                      const MapObject &mapObject)
 {

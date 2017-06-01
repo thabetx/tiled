@@ -325,8 +325,9 @@ TemplateGroup *MapReaderPrivate::readTemplateGroup()
     while (xml.readNextStartElement()) {
         if (xml.name() == QLatin1String("template"))
             templateGroup->addObject(readTemplate());
-//        else if (xml.name() == QLatin1String("tileset"))
-//            objectGroup->mergeProperties(readProperties());
+        // TODO: Handle reading tilesets
+        // else if (xml.name() == QLatin1String("tileset"))
+        //     objectGroup->mergeProperties(readProperties());
         else
             readUnknownElement();
     }
@@ -1198,8 +1199,6 @@ QString MapReader::errorString() const
 TemplateGroup *MapReader::readTemplateGroup(QIODevice *device, const QString &path)
 {
     TemplateGroup *templateGroup = d->readTemplateGroup(device, path);
-//    if (templateGroup && !templateGroup->isCollection())
-//        templateGroup->loadImage();
 
     return templateGroup;
 }
@@ -1212,8 +1211,6 @@ TemplateGroup *MapReader::readTemplateGroup(const QString &fileName)
     }
 
     TemplateGroup *templateGroup = readTemplateGroup(&file, QFileInfo(fileName).absolutePath());
-//    if (templateGroup)
-//        templateGroup->setFileName(fileName);
 
     return templateGroup;
 }
