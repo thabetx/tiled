@@ -130,7 +130,7 @@ MapDocument::~MapDocument()
  * it saves the selected objects to a file then reads them.
  */
 #include <QDebug>
-bool MapDocument::saveSelectedObjectAsATemplate()
+bool MapDocument::saveSelectedObjectsAsATemplateGroup()
 {
     TemplateFormat *templateFormat = new TtxTemplateFormat();
 
