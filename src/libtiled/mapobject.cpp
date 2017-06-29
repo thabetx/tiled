@@ -33,6 +33,7 @@
 #include "map.h"
 #include "objectgroup.h"
 #include "tile.h"
+#include "templatemanager.h"
 
 #include <QFontMetricsF>
 #include <qmath.h>
@@ -80,7 +81,8 @@ MapObject::MapObject():
     mTemplateRef({nullptr, 0}),
     mObjectGroup(nullptr),
     mRotation(0.0f),
-    mVisible(true)
+    mVisible(true),
+    mChangedProperties(0)
 {
 }
 
@@ -97,7 +99,8 @@ MapObject::MapObject(const QString &name, const QString &type,
     mTemplateRef({nullptr, 0}),
     mObjectGroup(nullptr),
     mRotation(0.0f),
-    mVisible(true)
+    mVisible(true),
+    mChangedProperties(0)
 {
 }
 
@@ -247,6 +250,34 @@ MapObject *MapObject::clone() const
     o->setRotation(mRotation);
     o->setVisible(mVisible);
     return o;
+}
+
+const MapObject *MapObject::baseObject() {
+    if (!mTemplateRef.templateGroup)
+        return nullptr;
+
+    for (auto *objectTemplate : mTemplateRef.templateGroup->templates())
+        if (objectTemplate->id() == mTemplateRef.templateId)
+            return objectTemplate->object();
+
+    return nullptr;
+}
+
+void MapObject::sync()
+{
+    const MapObject *base = baseObject();
+
+    if (!base)
+        return;
+
+    setSize(base->size());
+    setType(base->type());
+    setTextData(base->textData());
+    setPolygon(base->polygon());
+    setShape(base->shape());
+    setCell(base->cell());
+    setRotation(base->rotation());
+    setVisible(base->isVisible());
 }
 
 void MapObject::flipRectObject(const QTransform &flipTransform)
