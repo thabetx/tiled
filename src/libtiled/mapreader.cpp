@@ -971,23 +971,12 @@ MapObject *MapReaderPrivate::readObject()
     if (tid) { // This object is a template instance
         ObjectTemplate *objectTemplate = templateForTid(tid);
 
-        if (objectTemplate) {
-            templateLoaded = true;
-            object = objectTemplate->object()->clone();
+        object = new MapObject;
 
-            if (!name.isEmpty())
-                object->setName(name);
-
-            if (!type.isEmpty())
-                object->setType(type);
-
-            object->setPosition(pos);
-
-            if (!size.isEmpty())
-                object->setSize(size);
-
+        if (objectTemplate)
             object->setTemplateRef({objectTemplate->templateGroup(), objectTemplate->id()});
-        }
+
+        return object;
     }
 
     if (!templateLoaded)

@@ -50,6 +50,7 @@ using namespace Tiled::Internal;
 MapObjectItem::MapObjectItem(MapObject *object, MapDocument *mapDocument,
                              ObjectGroupItem *parent):
     QGraphicsItem(parent),
+//    mObject(object->baseObject()),
     mObject(object),
     mMapDocument(mapDocument)
 {

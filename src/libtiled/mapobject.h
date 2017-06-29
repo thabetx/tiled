@@ -45,6 +45,7 @@ namespace Tiled {
 
 class ObjectGroup;
 class Tile;
+class TemplateGroup;
 
 struct TILEDSHARED_EXPORT TextData
 {
@@ -190,6 +191,7 @@ public:
     void flip(FlipDirection direction, const QPointF &origin);
 
     MapObject *clone() const;
+    const MapObject *baseObject() const;
 
 private:
     void flipRectObject(const QTransform &flipTransform);

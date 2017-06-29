@@ -33,6 +33,7 @@
 #include "map.h"
 #include "objectgroup.h"
 #include "tile.h"
+#include "templategroup.h"
 
 #include <QFontMetricsF>
 #include <qmath.h>
@@ -287,6 +288,20 @@ void MapObject::flipTileObject(const QTransform &flipTransform)
     QPointF newPos = flipTransform.map(topLeftTilePoint);
 
     setPosition(newPos);
+}
+
+const MapObject *MapObject::baseObject() const
+{
+    const int templateId = mTemplateRef.templateId;
+//    const auto group = mTemplateRef.templateGroup;
+    TemplateGroup *group = mTemplateRef.templateGroup;
+//    bool isTemplateInstance = group;
+
+    if (group)
+        return group->templateAt(0)->object();
+    else
+        return this;
+
 }
 
 } // namespace Tiled
