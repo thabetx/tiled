@@ -32,7 +32,6 @@
 
 #include "compression.h"
 #include "gidmapper.h"
-#include "tidmapper.h"
 #include "grouplayer.h"
 #include "map.h"
 #include "mapobject.h"
@@ -279,7 +278,13 @@ void MapWriterPrivate::writeMap(QXmlStreamWriter &w, const Map &map)
     for (TemplateGroup *templateGroup : map.templateGroups()) {
         writeTemplateGroup(w, *templateGroup, firstTid);
         mTidMapper.insert(firstTid, templateGroup);
-        firstTid += templateGroup->nextTemplateId();
+
+        // When a template group is not loaded, reserve enough space
+        // to enable loading when the templateGroup is fixed
+        if (templateGroup->loaded())
+            firstTid += templateGroup->nextTemplateId();
+        else
+            firstTid += templateGroup->maxId() + 1;
     }
 
     writeLayers(w, map.layers());
@@ -652,9 +657,9 @@ void MapWriterPrivate::writeObjectGroup(QXmlStreamWriter &w,
     w.writeEndElement();
 }
 
-static bool shouldWrite(bool holdsInfo, bool isTemplateInstance, bool changed) {
-    return (!isTemplateInstance && holdsInfo) ||
-           (isTemplateInstance && changed);
+static bool shouldWrite(bool holdsInfo, bool isTemplateInstance, bool changed)
+{
+    return isTemplateInstance ? changed : holdsInfo;
 }
 
 void MapWriterPrivate::writeObject(QXmlStreamWriter &w,
@@ -664,21 +669,20 @@ void MapWriterPrivate::writeObject(QXmlStreamWriter &w,
     const int id = mapObject.id();
     const QString &name = mapObject.name();
     const QString &type = mapObject.type();
-
     const QPointF pos = mapObject.position();
 
     TemplateRef templateRef = mapObject.templateRef();
-    const int templateId = templateRef.templateId;
-    const auto group = templateRef.templateGroup;
-    bool isTemplateInstance = group;
+
+    // Use the template group pointer as indicator for valid templates
+    bool isTemplateInstance = templateRef.templateGroup;
 
     if (isTemplateInstance) {
-        int groupFirstTid = mTidMapper.templateGroupToFirstTid(group);
-        int tid = templateId + groupFirstTid;
+        unsigned tid = mTidMapper.templateRefToTid(templateRef);
         w.writeAttribute(QLatin1String("tid"), QString::number(tid));
     }
 
-    if (id != 0 && !isTemplateInstance)
+    // make sure that this removal was correct
+    if (id != 0)
         w.writeAttribute(QLatin1String("id"), QString::number(id));
 
     if (shouldWrite(!name.isEmpty(), isTemplateInstance, mapObject.propertyChanged(MapObject::NameProperty)))
@@ -712,8 +716,7 @@ void MapWriterPrivate::writeObject(QXmlStreamWriter &w,
     if (shouldWrite(!mapObject.isVisible(), isTemplateInstance, mapObject.propertyChanged(MapObject::VisibleProperty)))
         w.writeAttribute(QLatin1String("visible"), QLatin1String("0"));
 
-    if (!isTemplateInstance)
-        writeProperties(w, mapObject.properties());
+    writeProperties(w, mapObject.properties());
 
     switch (mapObject.shape()) {
     case MapObject::Rectangle:
@@ -744,7 +747,12 @@ void MapWriterPrivate::writeObject(QXmlStreamWriter &w,
             w.writeEmptyElement(QLatin1String("ellipse"));
         break;
     case MapObject::Text: {
-        if (shouldWrite(true, isTemplateInstance, mapObject.propertyChanged(MapObject::TextProperty)))
+        if (shouldWrite(true, isTemplateInstance,
+                        mapObject.propertyChanged(MapObject::TextProperty) ||
+                        mapObject.propertyChanged(MapObject::TextFontProperty) ||
+                        mapObject.propertyChanged(MapObject::TextAlignmentProperty) ||
+                        mapObject.propertyChanged(MapObject::TextWordWrapProperty) ||
+                        mapObject.propertyChanged(MapObject::TextColorProperty)  ))
             writeObjectText(w, mapObject.textData());
         break;
     }

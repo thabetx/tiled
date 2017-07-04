@@ -252,32 +252,47 @@ MapObject *MapObject::clone() const
     return o;
 }
 
-const MapObject *MapObject::baseObject() {
+const MapObject *MapObject::templateObject() const
+{
     if (!mTemplateRef.templateGroup)
         return nullptr;
 
-    for (auto *objectTemplate : mTemplateRef.templateGroup->templates())
-        if (objectTemplate->id() == mTemplateRef.templateId)
-            return objectTemplate->object();
+    auto x = mTemplateRef.templateGroup->findTemplate(mTemplateRef.templateId);
+    if (x)
+        return x->object();
 
     return nullptr;
 }
 
-void MapObject::sync()
+void MapObject::syncWithTemplate()
 {
-    const MapObject *base = baseObject();
+    const MapObject *base = templateObject();
 
     if (!base)
         return;
 
-    setSize(base->size());
-    setType(base->type());
-    setTextData(base->textData());
-    setPolygon(base->polygon());
-    setShape(base->shape());
-    setCell(base->cell());
-    setRotation(base->rotation());
-    setVisible(base->isVisible());
+    if (!propertyChanged(MapObject::SizeProperty))
+        setSize(base->size());
+
+    if (!propertyChanged(MapObject::TypeProperty))
+        setType(base->type());
+
+    if (!propertyChanged(MapObject::TextProperty))
+        setTextData(base->textData());
+
+    if (!propertyChanged(MapObject::ShapeProperty)) {
+        setShape(base->shape());
+        setPolygon(base->polygon());
+    }
+
+    if (!propertyChanged(MapObject::CellProperty))
+        setCell(base->cell());
+
+    if (!propertyChanged(MapObject::RotationProperty))
+        setRotation(base->rotation());
+
+    if (!propertyChanged(MapObject::VisibleProperty))
+        setVisible(base->isVisible());
 }
 
 void MapObject::flipRectObject(const QTransform &flipTransform)

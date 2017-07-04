@@ -69,7 +69,7 @@ struct TILEDSHARED_EXPORT TextData
 
 struct TemplateRef {
     TemplateGroup *templateGroup;
-    int templateId;
+    unsigned templateId;
 };
 
 /**
@@ -200,9 +200,9 @@ public:
 
     MapObject *clone() const;
 
-    const MapObject *baseObject();
+    const MapObject *templateObject() const;
 
-    void sync();
+    void syncWithTemplate();
 
 private:
     void flipRectObject(const QTransform &flipTransform);

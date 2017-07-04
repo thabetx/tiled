@@ -54,6 +54,8 @@
 #include "resizetilelayer.h"
 #include "rotatemapobject.h"
 #include "staggeredrenderer.h"
+#include "templategroup.h"
+#include "templategroupdocument.h"
 #include "terrain.h"
 #include "terrainmodel.h"
 #include "tile.h"
@@ -61,7 +63,6 @@
 #include "tilesetdocument.h"
 #include "tilesetmanager.h"
 #include "tmxmapformat.h"
-#include "templategroupdocument.h"
 
 #include <QFileInfo>
 #include <QRect>
@@ -668,6 +669,15 @@ SharedTileset MapDocument::replaceTileset(int index, const SharedTileset &tilese
         emit tilesetRemoved(oldTileset.data());
 
     return oldTileset;
+}
+
+void MapDocument::replaceTemplateGroup(int index, TemplateGroup *templateGroup)
+{
+    // the above function is the reference
+    // the const thing is not working here
+    TemplateGroup *oldTemplateGroup = mMap->templateGroups().at(index);
+
+    mMap->replaceTemplateGroup(oldTemplateGroup, templateGroup);
 }
 
 void MapDocument::setSelectedArea(const QRegion &selection)

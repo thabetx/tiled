@@ -23,6 +23,7 @@
 #include "mapdocument.h"
 #include "mapobject.h"
 #include "mapobjectmodel.h"
+#include <QDebug>
 
 #include <QCoreApplication>
 
@@ -36,6 +37,7 @@ ChangePolygon::ChangePolygon(MapDocument *mapDocument,
     , mMapObject(mapObject)
     , mOldPolygon(oldPolygon)
     , mNewPolygon(mapObject->polygon())
+    , mOldChangeState(mapObject->propertyChanged(MapObject::ShapeProperty))
 {
     setText(QCoreApplication::translate("Undo Commands", "Change Polygon"));
 }
@@ -55,12 +57,16 @@ ChangePolygon::ChangePolygon(MapDocument *mapDocument,
 
 void ChangePolygon::undo()
 {
+    qDebug() << "undo";
+    qDebug() << mOldChangeState;
     mMapDocument->mapObjectModel()->setObjectPolygon(mMapObject, mOldPolygon);
     mMapObject->setPropertyChanged(MapObject::ShapeProperty, mOldChangeState);
 }
 
 void ChangePolygon::redo()
 {
+    qDebug() << "do";
+    qDebug() << mOldChangeState;
     mMapDocument->mapObjectModel()->setObjectPolygon(mMapObject, mNewPolygon);
     mMapObject->setPropertyChanged(MapObject::ShapeProperty);
 }

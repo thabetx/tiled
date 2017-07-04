@@ -37,7 +37,8 @@ using namespace Tiled;
 TemplateGroup::TemplateGroup():
     Object(TemplateGroupType),
     mNextTemplateId(0),
-    mLoaded(true)
+    mLoaded(true),
+    mMaxId(0)
 {
 }
 
@@ -45,7 +46,8 @@ TemplateGroup::TemplateGroup(QString name):
     Object(TemplateGroupType),
     mName(name),
     mNextTemplateId(0),
-    mLoaded(true)
+    mLoaded(true),
+    mMaxId(0)
 {
 }
 
@@ -75,4 +77,13 @@ void TemplateGroup::addTileset(const SharedTileset &tileset)
     tilesetManager->addReference(tileset);
 
     mTilesets.append(tileset);
+}
+
+const ObjectTemplate *TemplateGroup::findTemplate(unsigned id) const
+{
+    for (auto *objectTemplate : mTemplates)
+        if (objectTemplate->id() == id)
+            return objectTemplate;
+
+    return nullptr;
 }

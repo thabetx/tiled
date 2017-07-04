@@ -26,6 +26,7 @@
 #include "mapdocument.h"
 #include "preferences.h"
 #include "replacetileset.h"
+#include "templatesdock.h"
 #include "tmxmapformat.h"
 #include "tile.h"
 #include "tilesetchanges.h"
@@ -45,6 +46,7 @@
 #include <QSortFilterProxyModel>
 #include <QStackedLayout>
 #include <QTreeView>
+#include <QDebug>
 
 #include <algorithm>
 
@@ -60,6 +62,8 @@ QString BrokenLink::filePath() const
         return _tileset->fileName();
     case TilesetTileImageSource:
         return _tile->imageSource();
+    case TemplateGroupReference:
+        return _templateGroup->fileName();
     }
 
     return QString();
@@ -73,6 +77,22 @@ Tileset *BrokenLink::tileset() const
         return _tileset;
     case TilesetTileImageSource:
         return _tile->tileset();
+    case TemplateGroupReference:
+        return nullptr;
+    }
+
+    return nullptr;
+}
+
+TemplateGroup *BrokenLink::templateGroup() const
+{
+    switch (type) {
+    case TilesetImageSource:
+    case MapTilesetReference:
+    case TilesetTileImageSource:
+        return nullptr;
+    case TemplateGroupReference:
+        return _templateGroup;
     }
 
     return nullptr;
@@ -150,6 +170,16 @@ void BrokenLinksModel::refresh()
             }
         };
 
+        auto processTemplateGroup = [this](TemplateGroup *templateGroup) {
+//            qDebug() << "here";
+            if (!templateGroup->loaded()) {
+                BrokenLink link;
+                link.type = TemplateGroupReference;
+                link._templateGroup = templateGroup;
+                mBrokenLinks.append(link);
+            }
+        };
+
         if (auto mapDocument = qobject_cast<MapDocument*>(mDocument)) {
             for (const SharedTileset &tileset : mapDocument->map()->tilesets()) {
                 if (!tileset->fileName().isEmpty() && !tileset->loaded()) {
@@ -161,8 +191,21 @@ void BrokenLinksModel::refresh()
                     processTileset(tileset);
                 }
             }
+
+            for (TemplateGroup *templateGroup : mapDocument->map()->templateGroups()) {
+                if (!templateGroup->fileName().isEmpty() && !templateGroup->loaded()) {
+                    BrokenLink link;
+                    link.type = TemplateGroupReference;
+                    link._templateGroup = templateGroup;
+                    mBrokenLinks.append(link);
+                } else {
+                    processTemplateGroup(templateGroup);
+                }
+            }
         } else if (auto tilesetDocument = qobject_cast<TilesetDocument*>(mDocument)) {
             processTileset(tilesetDocument->tileset());
+        } else if (auto templateGroupDocument = qobject_cast<TemplateGroupDocument*>(mDocument)) {
+            processTemplateGroup(templateGroupDocument->templateGroup());
         }
     }
 
@@ -202,6 +245,8 @@ QVariant BrokenLinksModel::data(const QModelIndex &index, int role) const
                 return tr("Tileset image");
             case TilesetTileImageSource:
                 return tr("Tile image");
+            case TemplateGroupReference:
+                return tr("Template group");
             }
             break;
         }
@@ -404,6 +449,7 @@ void BrokenLinksWidget::selectionChanged()
     mLocateButton->setEnabled(!selection.isEmpty());
 
     bool isTileset = qobject_cast<TilesetDocument*>(mBrokenLinksModel->document()) != nullptr;
+    bool isTemplateGroup = qobject_cast<TemplateGroupDocument*>(mBrokenLinksModel->document()) != nullptr;
 
     if (!selection.isEmpty()) {
         const auto firstIndex = selection.first();
@@ -420,6 +466,11 @@ void BrokenLinksWidget::selectionChanged()
             else
                 mLocateButton->setText(tr("Open Tileset..."));
             break;
+        case Tiled::Internal::TemplateGroupReference:
+            if (isTemplateGroup)
+                mLocateButton->setText(tr("Locate File..."));
+            else
+                mLocateButton->setText(tr("Open Template Group..."));
         }
     }
 }
@@ -443,6 +494,15 @@ void BrokenLinksWidget::tryFixLinks(const QVector<BrokenLink> &links)
                 DocumentManager::instance()->openTileset(tileset);
                 return;
             }
+        }
+        qDebug() << "I was here";
+        if (link.type == TemplateGroupReference) {
+            qDebug() << "hello";
+            TemplateGroup *templateGroup = link.templateGroup();
+            auto dock = TemplatesDock::instance();
+            dock->openTemplateGroup();
+            templateGroup = TemplatesDock::instance()->openTemplateGroup();
+            return;
         }
     }
 
@@ -478,6 +538,7 @@ void BrokenLinksWidget::tryFixLink(const BrokenLink &link)
 {
     Document *document = mBrokenLinksModel->document();
     Preferences *prefs = Preferences::instance();
+
 
     if (link.type == TilesetImageSource || link.type == TilesetTileImageSource) {
         auto tilesetDocument = qobject_cast<TilesetDocument*>(document);
@@ -563,6 +624,17 @@ void BrokenLinksWidget::tryFixLink(const BrokenLink &link)
 
         prefs->setLastPath(Preferences::ExternalTileset,
                            QFileInfo(fileName).path());
+    } else if (link.type == TemplateGroupReference) {
+        qDebug() << " I was here  222";
+
+        // maybe it's there with a wrong name
+        auto templateGroup = TemplatesDock::instance()->openTemplateGroup();
+
+        MapDocument *mapDocument = static_cast<MapDocument*>(document);
+        int index = mapDocument->map()->templateGroups().indexOf(link._templateGroup);
+        qDebug() << index;
+        if (index != -1)
+            mapDocument->replaceTemplateGroup(index, templateGroup);
     }
 }
 
@@ -619,7 +691,10 @@ bool BrokenLinksWidget::tryFixLink(const BrokenLink &link, const QString &newFil
         int index = mapDocument->map()->tilesets().indexOf(link._tileset->sharedPointer());
         if (index != -1)
             document->undoStack()->push(new ReplaceTileset(mapDocument, index, newTileset));
+    } else if (link.type == TemplateGroupReference) {
+        qDebug() << "what should I do then?";
     }
+
 
     return true;
 }

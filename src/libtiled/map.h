@@ -346,6 +346,7 @@ public:
     const QList<TemplateGroup*> &templateGroups() const { return mTemplateGroups; }
 
     bool addTemplateGroup(TemplateGroup *templateGroup);
+    void replaceTemplateGroup(TemplateGroup *oldTemplateGroup, TemplateGroup *templateGroup);
 
     /**
      * Returns the background color of this map.

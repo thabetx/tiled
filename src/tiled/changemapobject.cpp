@@ -53,8 +53,11 @@ ChangeMapObject::ChangeMapObject(MapDocument *mapDocument,
     }
 }
 
+#include <QDebug>
+
 void ChangeMapObject::swap()
 {
+    qDebug() << "hello everyone";
     QVariant oldValue = mMapObject->mapObjectProperty(mProperty);
     mMapDocument->mapObjectModel()->setObjectProperty(mMapObject, mProperty, mValue);
     std::swap(mValue, oldValue);

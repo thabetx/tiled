@@ -35,10 +35,20 @@
 using namespace Tiled;
 using namespace Tiled::Internal;
 
+TemplatesDock *TemplatesDock::mInstance;
+
+TemplatesDock *TemplatesDock::instance()
+{
+    if (!mInstance)
+        mInstance = new TemplatesDock;
+    return mInstance;
+}
+
 TemplatesDock::TemplatesDock(QWidget *parent):
     QDockWidget(parent),
     mTemplatesView(new TemplatesView),
-    mNewTemplateGroup(new QAction(this))
+    mNewTemplateGroup(new QAction(this)),
+    mOpenTemplateGroup(new QAction(this))
 {
     setObjectName(QLatin1String("TemplatesDock"));
 
@@ -53,12 +63,17 @@ TemplatesDock::TemplatesDock(QWidget *parent):
     Utils::setThemeIcon(mNewTemplateGroup, "document-new");
     connect(mNewTemplateGroup, SIGNAL(triggered()), SLOT(newTemplateGroup()));
 
+    mOpenTemplateGroup->setIcon(QIcon(QLatin1String(":/images/16x16/document-open.png")));
+    Utils::setThemeIcon(mOpenTemplateGroup, "document-open");
+    connect(mOpenTemplateGroup, SIGNAL(triggered()), SLOT(openTemplateGroup()));
+
     QToolBar *toolBar = new QToolBar;
     toolBar->setFloatable(false);
     toolBar->setMovable(false);
     toolBar->setIconSize(Utils::smallIconSize());
 
     toolBar->addAction(mNewTemplateGroup);
+    toolBar->addAction(mOpenTemplateGroup);
 
     layout->addWidget(toolBar);
     setWidget(widget);
@@ -69,10 +84,15 @@ TemplatesDock::TemplatesDock(QWidget *parent):
     QString documentsFileName = prefs->templateDocumentsFile();
 
     TemplateDocumentsSerializer templateDocumentsSerializer;
-    templateDocumentsSerializer.readTemplateDocuments(documentsFileName, mTemplateDocuments);
 
     auto model = ObjectTemplateModel::instance();
-    model->setTemplateDocuments(mTemplateDocuments);
+//    auto templateDocuments = model->templateDocuments();
+    TemplateDocuments templateDocuments;
+
+    templateDocumentsSerializer.readTemplateDocuments(documentsFileName, templateDocuments);
+
+    // is it necessary to call this
+    model->setTemplateDocuments(templateDocuments);
 
     mTemplatesView->setModel(model);
 
@@ -85,14 +105,15 @@ TemplatesDock::TemplatesDock(QWidget *parent):
 
     TemplateGroups templateGroups;
 
-    for (auto document : mTemplateDocuments)
+    for (auto document : templateDocuments)
         templateGroups.append(document->templateGroup());
 
     manager->setTemplateGroups(templateGroups);
 }
 
-TemplatesDock::~TemplatesDock() {
-    qDeleteAll(mTemplateDocuments);
+TemplatesDock::~TemplatesDock()
+{
+    ObjectTemplateModel::deleteInstance();
 }
 
 void TemplatesDock::newTemplateGroup()
@@ -127,6 +148,37 @@ void TemplatesDock::newTemplateGroup()
 
     prefs->setLastPath(Preferences::TemplateDocumentsFile,
                        QFileInfo(fileName).path());
+}
+
+TemplateGroup* TemplatesDock::openTemplateGroup()
+{
+    QString filter = TtxTemplateGroupFormat::instance()->nameFilter();
+
+    Preferences *prefs = Preferences::instance();
+    QString suggestedFileName = prefs->lastPath(Preferences::TemplateDocumentsFile);
+    suggestedFileName += QLatin1String("/untitled.ttx");
+
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Save File"),
+                                                    suggestedFileName,
+                                                    filter);
+
+    if (fileName.isEmpty())
+        return nullptr;
+
+    auto templateGroupFormat = TtxTemplateGroupFormat::instance();
+    auto templateGroupDocument = TemplateGroupDocument::load(fileName, templateGroupFormat);
+
+    auto model = ObjectTemplateModel::instance();
+    bool success = model->addDocument(templateGroupDocument);
+
+    if (!success)
+        QMessageBox::information(this, tr("Open Template Document"),
+                                 tr("This template document has been opened already."));
+
+    prefs->setLastPath(Preferences::TemplateDocumentsFile,
+                       QFileInfo(fileName).path());
+
+    return templateGroupDocument->templateGroup();
 }
 
 void TemplatesDock::retranslateUi()

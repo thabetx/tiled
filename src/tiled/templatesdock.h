@@ -42,19 +42,26 @@ class TemplatesDock : public QDockWidget
     Q_OBJECT
 
 public:
+    static TemplatesDock *instance();
+
     TemplatesDock(QWidget *parent = nullptr);
     ~TemplatesDock();
 
 private slots:
     void newTemplateGroup();
 
+public slots:
+    TemplateGroup *openTemplateGroup();
+
 private:
     void retranslateUi();
 
     TemplatesView *mTemplatesView;
-    TemplateDocuments mTemplateDocuments;
 
     QAction *mNewTemplateGroup;
+    QAction *mOpenTemplateGroup;
+
+    static TemplatesDock *mInstance;
 };
 
 class TemplatesView : public QTreeView

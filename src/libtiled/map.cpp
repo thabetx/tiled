@@ -298,6 +298,14 @@ bool Map::addTemplateGroup(TemplateGroup *templateGroup)
     return true;
 }
 
+void Map::replaceTemplateGroup(TemplateGroup *oldTemplateGroup, TemplateGroup *newTemplateGroup)
+{
+    Q_ASSERT(oldTemplateGroup != newTemplateGroup);
+
+    const int index = mTemplateGroups.indexOf(oldTemplateGroup);
+    mTemplateGroups.replace(index, newTemplateGroup);
+}
+
 void Map::initializeObjectIds(ObjectGroup &objectGroup)
 {
     for (MapObject *o : objectGroup) {
