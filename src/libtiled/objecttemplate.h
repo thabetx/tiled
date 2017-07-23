@@ -66,6 +66,7 @@ inline const MapObject *ObjectTemplate::object() const
 
 inline void ObjectTemplate::setObject(MapObject *object)
 {
+    delete mObject;
     mObject = object->clone();
     mObject->setId(0);
 }
