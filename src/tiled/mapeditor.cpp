@@ -46,6 +46,7 @@
 #include "mapview.h"
 #include "minimapdock.h"
 #include "newtilesetdialog.h"
+#include "objectgroup.h"
 #include "objectsdock.h"
 #include "templatesdock.h"
 #include "objectselectiontool.h"
@@ -315,6 +316,10 @@ void MapEditor::addDocument(Document *document)
         if (Layer *layer = layerAtGlobalIndex(mapDocument->map(), layerIndex))
             mapDocument->setCurrentLayer(layer);
     }
+
+    // Update all templates instances in this MapDocument when a template is edited
+    // Maybe it can be optimized
+    connect(mTemplatesDock, &TemplatesDock::templateEdited, mapDocument, &MapDocument::updateAllTemplateInstances);
 }
 
 void MapEditor::removeDocument(Document *document)
