@@ -289,6 +289,9 @@ void TemplatesDock::setTemplate(ObjectTemplate *objectTemplate)
 
         connect(mDummyMapDocument->undoStack(), &QUndoStack::indexChanged,
                 this, [this](){ mRedoAction->setEnabled(mDummyMapDocument->undoStack()->canRedo()); });
+
+        connect(mDummyMapDocument->undoStack(), &QUndoStack::indexChanged,
+                this, &TemplatesDock::templateEdited);
     } else {
         mPropertiesDock->setDocument(nullptr);
         mDummyMapDocument = nullptr;
