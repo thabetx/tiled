@@ -26,6 +26,7 @@ namespace Tiled {
 
 class MapObject;
 class ObjectGroup;
+class Tile;
 
 namespace Internal {
 
@@ -73,6 +74,7 @@ private slots:
     void removeObjects();
     void resetTileSize();
     void saveSelectedObject();
+    void changeTile();
 
     void flipHorizontally();
     void flipVertically();

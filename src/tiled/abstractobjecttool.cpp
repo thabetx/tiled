@@ -20,6 +20,7 @@
 
 #include "abstractobjecttool.h"
 
+#include "changemapobject.h"
 #include "map.h"
 #include "mapdocument.h"
 #include "mapobject.h"
@@ -207,6 +208,18 @@ void AbstractObjectTool::saveSelectedObject()
         mapDocument()->saveSelectedObject(name, groupIndex);
 }
 
+void AbstractObjectTool::changeTile()
+{
+    QList<MapObject*> tileObjects;
+
+    for (auto object : mapDocument()->selectedObjects())
+        if (object->isTileObject())
+            tileObjects.append(object);
+
+    QUndoStack *undoStack = mapDocument()->undoStack();
+    undoStack->push(new ChangeMapObjectsTile(mapDocument(), tileObjects, tile()));
+}
+
 void AbstractObjectTool::flipHorizontally()
 {
     mapDocument()->flipSelectedObjects(FlipHorizontally);
@@ -274,6 +287,9 @@ void AbstractObjectTool::showContextMenu(MapObjectItem *clickedObjectItem,
         resetTileSizeAction->setEnabled(std::any_of(selectedObjects.begin(),
                                                     selectedObjects.end(),
                                                     isResizedTileObject));
+
+        auto changeTileAction = menu.addAction(tr("Replace Tile"), this, SLOT(changeTile()));
+        changeTileAction->setEnabled(tile());
     }
 
     if (selectedObjects.size() == 1) {
