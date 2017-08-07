@@ -77,3 +77,10 @@ const ObjectTemplate *TemplateManager::findTemplate(const QString &fileName, uns
     return group->findTemplate(templateId);;
 }
 
+void TemplateManager::replace(TemplateGroup *oldTemplateGroup, TemplateGroup *newtemplateGroup)
+{
+    int index = mTemplateGroups.indexOf(oldTemplateGroup);
+    if (index != -1)
+        mTemplateGroups.replace(index, newtemplateGroup);
+}
+

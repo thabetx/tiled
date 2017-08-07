@@ -42,6 +42,7 @@ public:
 
     void setTemplateGroups(TemplateGroups templateGroups);
     void addTemplateGroup(TemplateGroup *templateGroup);
+    void replace(TemplateGroup *oldTemplateGroup, TemplateGroup *newtemplateGroup);
 
 private:
     Q_DISABLE_COPY(TemplateManager)

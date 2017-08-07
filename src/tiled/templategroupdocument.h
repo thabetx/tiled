@@ -60,6 +60,8 @@ public:
 
     TemplateGroup *templateGroup();
 
+    void setTemplateGroup(TemplateGroup *templateGroup);
+
 private:
     TemplateGroup *mTemplateGroup;
 };

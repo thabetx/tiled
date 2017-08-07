@@ -103,6 +103,12 @@ void TemplateGroupDocument::addTemplate(ObjectTemplate *objectTemplate)
     mTemplateGroup->addTemplate(objectTemplate);
 }
 
+void TemplateGroupDocument::setTemplateGroup(TemplateGroup *templateGroup)
+{
+    setFileName(templateGroup->fileName());
+    mTemplateGroup = templateGroup;
+}
+
 static void writeTemplateDocumentsXml(QFileDevice *device,
                                       const QDir &fileDir,
                                       const TemplateDocuments &templateDocuments)
@@ -160,16 +166,19 @@ static void readTemplateDocumentsXml(QFileDevice *device,
             QString path(atts.value(QLatin1String("source")).toString());
             path = resolveReference(path, filePath);
 
-            if (!loadedPaths.contains(path)) {
-                loadedPaths.insert(path);
+            if (loadedPaths.contains(path))
+                continue;
+            loadedPaths.insert(path);
 
-                // TODO: handle errors that might happen while loading
-                QScopedPointer<TemplateGroupDocument>
-                    templateGroupDocument(TemplateGroupDocument::load(path, templateGroupFormat));
-
-                if (templateGroupDocument)
-                    templateDocuments.append(templateGroupDocument.take());
+            TemplateGroupDocument *templateGroupDocument = TemplateGroupDocument::load(path, templateGroupFormat);
+            if (!templateGroupDocument) {
+                TemplateGroup *templateGroup = new TemplateGroup(path);
+                templateGroup->setFileName(path);
+                templateGroup->setLoaded(false);
+                templateGroupDocument = new TemplateGroupDocument(templateGroup);
             }
+
+            templateDocuments.append(templateGroupDocument);
         }
         reader.skipCurrentElement();
     }

@@ -95,6 +95,8 @@ BrokenLinksModel::BrokenLinksModel(QObject *parent)
     : QAbstractListModel(parent)
     , mDocument(nullptr)
 {
+    connect(ObjectTemplateModel::instance(), &ObjectTemplateModel::templateGroupReplaced,
+            this, &BrokenLinksModel::refresh);
 }
 
 void BrokenLinksModel::setDocument(Document *document)
@@ -144,27 +146,27 @@ void BrokenLinksModel::refresh()
 
     mBrokenLinks.clear();
 
-    if (mDocument && !mDocument->ignoreBrokenLinks()) {
-        auto processTileset = [this](const SharedTileset &tileset) {
-            if (tileset->isCollection()) {
-                for (Tile *tile : tileset->tiles()) {
-                    if (!tile->imageSource().isEmpty() && !tile->imageLoaded()) {
-                        BrokenLink link;
-                        link.type = TilesetTileImageSource;
-                        link._tile = tile;
-                        mBrokenLinks.append(link);
-                    }
-                }
-            } else {
-                if (!tileset->imageLoaded()) {
+    auto processTileset = [this](const SharedTileset &tileset) {
+        if (tileset->isCollection()) {
+            for (Tile *tile : tileset->tiles()) {
+                if (!tile->imageSource().isEmpty() && !tile->imageLoaded()) {
                     BrokenLink link;
-                    link.type = TilesetImageSource;
-                    link._tileset = tileset.data();
+                    link.type = TilesetTileImageSource;
+                    link._tile = tile;
                     mBrokenLinks.append(link);
                 }
             }
-        };
+        } else {
+            if (!tileset->imageLoaded()) {
+                BrokenLink link;
+                link.type = TilesetImageSource;
+                link._tileset = tileset.data();
+                mBrokenLinks.append(link);
+            }
+        }
+    };
 
+    if (mDocument && !mDocument->ignoreBrokenLinks()) {
         if (auto mapDocument = qobject_cast<MapDocument*>(mDocument)) {
             for (const SharedTileset &tileset : mapDocument->map()->tilesets()) {
                 if (!tileset->fileName().isEmpty() && !tileset->loaded()) {
@@ -187,6 +189,16 @@ void BrokenLinksModel::refresh()
             }
         } else if (auto tilesetDocument = qobject_cast<TilesetDocument*>(mDocument)) {
             processTileset(tilesetDocument->tileset());
+        }
+    }
+
+    for (TemplateGroupDocument *document : ObjectTemplateModel::instance()->templateDocuments()) {
+        auto templateGroup = document->templateGroup();
+        if (!templateGroup->fileName().isEmpty() && !templateGroup->loaded()) {
+            BrokenLink link;
+            link.type = TemplateGroupReference;
+            link._templateGroup = templateGroup;
+            mBrokenLinks.append(link);
         }
     }
 
@@ -627,11 +639,11 @@ void BrokenLinksWidget::tryFixLink(const BrokenLink &link)
                 return;
             }
 
-            ObjectTemplateModel::instance()->addTemplateGroup(newTemplateGroup);
+            ObjectTemplateModel::instance()->replace(link.templateGroup(), newTemplateGroup);
         }
 
         MapDocument *mapDocument = static_cast<MapDocument*>(document);
-        int index = mapDocument->map()->templateGroups().indexOf(link._templateGroup);
+        int index = mapDocument->map()->templateGroups().indexOf(link.templateGroup());
         if (index != -1)
             document->undoStack()->push(new ReplaceTemplate(mapDocument, index, newTemplateGroup));
     }

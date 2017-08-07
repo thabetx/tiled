@@ -237,6 +237,23 @@ void ObjectTemplateModel::save(const TemplateGroup *templateGroup) const
     }
 }
 
+void ObjectTemplateModel::replace(TemplateGroup *oldTemplateGroup, TemplateGroup *newtemplateGroup)
+{
+    for (int i = 0; i < mTemplateDocuments.count(); ++i) {
+        auto document = mTemplateDocuments.at(i);
+        if (document->templateGroup() == oldTemplateGroup) {
+            beginInsertRows(QModelIndex(), i + 1, i + newtemplateGroup->templateCount());
+            document->setTemplateGroup(newtemplateGroup);
+            endInsertRows();
+            break;
+        }
+    }
+
+    TemplateManager::instance()->replace(oldTemplateGroup, newtemplateGroup);
+    emit templateGroupReplaced();
+    delete oldTemplateGroup;
+}
+
 TemplateGroup *ObjectTemplateModel::toTemplateGroup(const QModelIndex &index) const
 {
     if (!index.isValid())
