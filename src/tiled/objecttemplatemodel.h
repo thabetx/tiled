@@ -62,8 +62,12 @@ public:
     QStringList mimeTypes() const override;
     QMimeData *mimeData(const QModelIndexList &indexes) const override;
 
+    bool ignoreBrokenLinks() const;
+    void setIgnoreBrokenLinks(bool ignoreBrokenLinks);
+
 signals:
     void templateGroupReplaced();
+    void ignoreBrokenLinksChanged(bool ignoreBrokenLinks);
 
 private:
     ObjectTemplateModel(QObject *parent = nullptr);
@@ -73,10 +77,15 @@ private:
 
     TemplateDocuments mTemplateDocuments;
     TemplateGroup *toTemplateGroup(const QModelIndex &index) const;
+    bool mIgnoreBrokenLinks;
 };
 
 inline const TemplateDocuments &ObjectTemplateModel::templateDocuments() const
 { return mTemplateDocuments; }
+
+inline bool ObjectTemplateModel::ignoreBrokenLinks() const
+{ return mIgnoreBrokenLinks; }
+
 
 } // namespace Internal
 } // namespace Tiled

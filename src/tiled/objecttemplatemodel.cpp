@@ -62,7 +62,8 @@ void ObjectTemplateModel::setTemplateDocuments(const TemplateDocuments &template
 }
 
 ObjectTemplateModel::ObjectTemplateModel(QObject *parent):
-    QAbstractItemModel(parent)
+    QAbstractItemModel(parent),
+    mIgnoreBrokenLinks(false)
 {
 }
 
@@ -299,6 +300,15 @@ QMimeData *ObjectTemplateModel::mimeData(const QModelIndexList &indexes) const
 
     mimeData->setData(QLatin1String(TEMPLATES_MIMETYPE), encodedData);
     return mimeData;
+}
+
+void ObjectTemplateModel::setIgnoreBrokenLinks(bool ignoreBrokenLinks)
+{
+    if (mIgnoreBrokenLinks == ignoreBrokenLinks)
+        return;
+
+    mIgnoreBrokenLinks = ignoreBrokenLinks;
+    emit ignoreBrokenLinksChanged(ignoreBrokenLinks);
 }
 
 } // namespace Internal

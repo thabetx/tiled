@@ -97,6 +97,9 @@ BrokenLinksModel::BrokenLinksModel(QObject *parent)
 {
     connect(ObjectTemplateModel::instance(), &ObjectTemplateModel::templateGroupReplaced,
             this, &BrokenLinksModel::refresh);
+
+    connect(ObjectTemplateModel::instance(), &ObjectTemplateModel::ignoreBrokenLinksChanged,
+            this, &BrokenLinksModel::refresh);
 }
 
 void BrokenLinksModel::setDocument(Document *document)
@@ -192,13 +195,16 @@ void BrokenLinksModel::refresh()
         }
     }
 
-    for (TemplateGroupDocument *document : ObjectTemplateModel::instance()->templateDocuments()) {
-        auto templateGroup = document->templateGroup();
-        if (!templateGroup->fileName().isEmpty() && !templateGroup->loaded()) {
-            BrokenLink link;
-            link.type = TemplateGroupReference;
-            link._templateGroup = templateGroup;
-            mBrokenLinks.append(link);
+    auto model = ObjectTemplateModel::instance();
+    if (!model->ignoreBrokenLinks()) {
+        for (TemplateGroupDocument *document : model->templateDocuments()) {
+            TemplateGroup *templateGroup = document->templateGroup();
+            if (!templateGroup->fileName().isEmpty() && !templateGroup->loaded()) {
+                BrokenLink link;
+                link.type = TemplateGroupReference;
+                link._templateGroup = templateGroup;
+                mBrokenLinks.append(link);
+            }
         }
     }
 
@@ -426,6 +432,7 @@ void BrokenLinksWidget::clicked(QAbstractButton *button)
 {
     if (button == mButtons->button(QDialogButtonBox::Ignore)) {
         mBrokenLinksModel->document()->setIgnoreBrokenLinks(true);
+        ObjectTemplateModel::instance()->setIgnoreBrokenLinks(true);
     } else if (button == mLocateButton) {
         const auto proxySelection = mView->selectionModel()->selectedRows();
         if (proxySelection.isEmpty())
