@@ -95,7 +95,7 @@ BrokenLinksModel::BrokenLinksModel(QObject *parent)
     : QAbstractListModel(parent)
     , mDocument(nullptr)
 {
-    connect(ObjectTemplateModel::instance(), &ObjectTemplateModel::templateGroupReplaced,
+    connect(ObjectTemplateModel::instance(), &ObjectTemplateModel::templateGroupUpdated,
             this, &BrokenLinksModel::refresh);
 
     connect(ObjectTemplateModel::instance(), &ObjectTemplateModel::ignoreBrokenLinksChanged,
@@ -182,6 +182,7 @@ void BrokenLinksModel::refresh()
                 }
             }
 
+            // Check the template groups inside the map
             for (TemplateGroup *templateGroup : mapDocument->map()->templateGroups()) {
                 if (!templateGroup->fileName().isEmpty() && !templateGroup->loaded()) {
                     BrokenLink link;
@@ -195,6 +196,7 @@ void BrokenLinksModel::refresh()
         }
     }
 
+    // Check the template groups inside the model
     auto model = ObjectTemplateModel::instance();
     if (!model->ignoreBrokenLinks()) {
         for (TemplateGroupDocument *document : model->templateDocuments()) {
@@ -204,6 +206,17 @@ void BrokenLinksModel::refresh()
                 link.type = TemplateGroupReference;
                 link._templateGroup = templateGroup;
                 mBrokenLinks.append(link);
+            } else { // If the template is alright, check the tilesets
+                for (const SharedTileset &tileset : templateGroup->tilesets()) {
+                    if (!tileset->fileName().isEmpty() && !tileset->loaded()) {
+                        BrokenLink link;
+                        link.type = MapTilesetReference;
+                        link._tileset = tileset.data();
+                        mBrokenLinks.append(link);
+                    } else {
+                        processTileset(tileset);
+                    }
+                }
             }
         }
     }
@@ -616,6 +629,12 @@ void BrokenLinksWidget::tryFixLink(const BrokenLink &link)
 
         MapDocument *mapDocument = static_cast<MapDocument*>(document);
         int index = mapDocument->map()->tilesets().indexOf(link._tileset->sharedPointer());
+
+        TemplateManager::instance()->replaceTileset(link.tileset()->sharedPointer(), newTileset);
+        ObjectTemplateModel::instance()->replaceTileset(link.tileset()->sharedPointer(), newTileset);
+
+//        emit TemplateManager::instance()->templatesUpdated();
+
         if (index != -1)
             document->undoStack()->push(new ReplaceTileset(mapDocument, index, newTileset));
 
@@ -645,8 +664,9 @@ void BrokenLinksWidget::tryFixLink(const BrokenLink &link)
                 QMessageBox::critical(window(), tr("Error Reading Template Group"), error);
                 return;
             }
-
-            ObjectTemplateModel::instance()->replace(link.templateGroup(), newTemplateGroup);
+            ObjectTemplateModel::instance()->replaceTemplateGroup(link.templateGroup(), newTemplateGroup);
+        } else {
+            ObjectTemplateModel::instance()->replaceTemplateGroup(link.templateGroup(), newTemplateGroup);
         }
 
         MapDocument *mapDocument = static_cast<MapDocument*>(document);

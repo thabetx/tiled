@@ -56,7 +56,8 @@ public:
     bool saveObjectToDocument(MapObject *object, QString name, int documentIndex);
     ObjectTemplate *toObjectTemplate(const QModelIndex &index) const;
     void save(const TemplateGroup *templateGroup) const;
-    void replace(TemplateGroup *oldTemplateGroup, TemplateGroup *newtemplateGroup);
+    void replaceTemplateGroup(TemplateGroup *oldTemplateGroup, TemplateGroup *newTemplateGroup);
+    void replaceTileset(SharedTileset oldTileset, SharedTileset newTileset);
 
     Qt::ItemFlags flags(const QModelIndex &index) const override;
     QStringList mimeTypes() const override;
@@ -66,7 +67,7 @@ public:
     void setIgnoreBrokenLinks(bool ignoreBrokenLinks);
 
 signals:
-    void templateGroupReplaced();
+    void templateGroupUpdated();
     void ignoreBrokenLinksChanged(bool ignoreBrokenLinks);
 
 private:

@@ -264,7 +264,8 @@ void TemplatesDock::setTemplate(ObjectTemplate *objectTemplate)
         mObject = objectTemplate->object()->clone();
 
         if (mObject->isTileObject()) {
-            map->addTileset(mObject->cell().tile()->sharedTileset());
+            if (mObject->cell().tile())
+                map->addTileset(mObject->cell().tile()->sharedTileset());
             mObject->setPosition({-mObject->width() / 2, mObject->height() / 2});
         } else {
             mObject->setPosition({-mObject->width() / 2, -mObject->height()  /2});

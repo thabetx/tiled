@@ -56,6 +56,7 @@
 #include "staggeredrenderer.h"
 #include "templategroup.h"
 #include "templategroupdocument.h"
+#include "templatemanager.h"
 #include "terrain.h"
 #include "tile.h"
 #include "tilelayer.h"
@@ -115,6 +116,9 @@ MapDocument::MapDocument(Map *map, const QString &fileName)
     // Register tileset references
     TilesetManager *tilesetManager = TilesetManager::instance();
     tilesetManager->addReferences(mMap->tilesets());
+
+    TemplateManager *templateManager = TemplateManager::instance();
+    connect(templateManager, &TemplateManager::templatesUpdated, this, &MapDocument::updateAllTemplateInstances);
 }
 
 MapDocument::~MapDocument()
@@ -929,8 +933,10 @@ void MapDocument::updateAllTemplateInstances()
     QList<MapObject*> objectList;
     for (ObjectGroup *group : mMap->objectGroups()) {
         for (auto object : group->objects()) {
-            object->syncWithTemplate();
-            objectList.append(object);
+            if (object->isTemplateInstance()) {
+                object->syncWithTemplate();
+                objectList.append(object);
+            }
         }
     }
     emit objectsChanged(objectList);

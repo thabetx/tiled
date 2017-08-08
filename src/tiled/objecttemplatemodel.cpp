@@ -238,21 +238,37 @@ void ObjectTemplateModel::save(const TemplateGroup *templateGroup) const
     }
 }
 
-void ObjectTemplateModel::replace(TemplateGroup *oldTemplateGroup, TemplateGroup *newtemplateGroup)
+void ObjectTemplateModel::replaceTemplateGroup(TemplateGroup *oldTemplateGroup, TemplateGroup *newTemplateGroup)
 {
     for (int i = 0; i < mTemplateDocuments.count(); ++i) {
-        auto document = mTemplateDocuments.at(i);
+        TemplateGroupDocument *document = mTemplateDocuments.at(i);
         if (document->templateGroup() == oldTemplateGroup) {
-            beginInsertRows(QModelIndex(), i + 1, i + newtemplateGroup->templateCount());
-            document->setTemplateGroup(newtemplateGroup);
+
+            // this might be wrong, we didn't count the tmeplate of the other groups
+            beginInsertRows(QModelIndex(), i + 1, i + newTemplateGroup->templateCount());
+            document->setTemplateGroup(newTemplateGroup);
             endInsertRows();
             break;
         }
     }
 
-    TemplateManager::instance()->replace(oldTemplateGroup, newtemplateGroup);
-    emit templateGroupReplaced();
-    delete oldTemplateGroup;
+    TemplateManager::instance()->replace(oldTemplateGroup, newTemplateGroup);
+    emit templateGroupUpdated();
+//    delete oldTemplateGroup;
+}
+
+void ObjectTemplateModel::replaceTileset(SharedTileset oldTileset, SharedTileset newTileset)
+{
+    beginResetModel();
+    emit templateGroupUpdated();
+    for (auto document : mTemplateDocuments) {
+        document ->templateGroup()->replaceTileset(oldTileset, newTileset);
+        document->save(document->fileName());
+    }
+    endResetModel();
+
+    // should you delete here like the above, shoudl the above delete
+    // delete oldTemplateGroup;
 }
 
 TemplateGroup *ObjectTemplateModel::toTemplateGroup(const QModelIndex &index) const

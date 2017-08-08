@@ -53,6 +53,7 @@ public:
 
     TemplateGroup *templateGroup() const;
     void setTemplateGroup(TemplateGroup *templateGroup);
+    void replaceTileset(SharedTileset oldTileset, SharedTileset newTileset);
 
 private:
     MapObject *mObject;

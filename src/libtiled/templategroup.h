@@ -80,6 +80,8 @@ public:
     unsigned maxId() const;
     void updateMaxId(unsigned maxId);
 
+    void replaceTileset(SharedTileset oldTileset, SharedTileset newTileset);
+
 private:
     QList<ObjectTemplate*> mTemplates;
     QVector<SharedTileset> mTilesets;

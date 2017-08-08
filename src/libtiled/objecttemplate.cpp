@@ -49,4 +49,13 @@ ObjectTemplate::ObjectTemplate(unsigned id, QString name):
 {
 }
 
+void ObjectTemplate::replaceTileset(SharedTileset oldTileset, SharedTileset newTileset)
+{
+    if (mObject->isTileObject() && mObject->cell().tileset()->sharedPointer() == oldTileset) {
+        Cell cell = mObject->cell();
+        cell.setTile(newTileset.data(), cell.tileId());
+        mObject->setCell(cell);
+    }
+}
+
 } // namespace Tiled

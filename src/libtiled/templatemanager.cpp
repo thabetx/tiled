@@ -84,3 +84,8 @@ void TemplateManager::replace(TemplateGroup *oldTemplateGroup, TemplateGroup *ne
         mTemplateGroups.replace(index, newtemplateGroup);
 }
 
+void TemplateManager::replaceTileset(SharedTileset oldTileset, SharedTileset newTileset)
+{
+    for (auto group : mTemplateGroups)
+        group->replaceTileset(oldTileset, newTileset);
+}

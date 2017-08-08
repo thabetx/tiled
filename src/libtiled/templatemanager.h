@@ -43,6 +43,10 @@ public:
     void setTemplateGroups(TemplateGroups templateGroups);
     void addTemplateGroup(TemplateGroup *templateGroup);
     void replace(TemplateGroup *oldTemplateGroup, TemplateGroup *newtemplateGroup);
+    void replaceTileset(SharedTileset oldTileset, SharedTileset newTileset);
+
+signals:
+    void templatesUpdated();
 
 private:
     Q_DISABLE_COPY(TemplateManager)

@@ -88,3 +88,24 @@ const ObjectTemplate *TemplateGroup::findTemplate(unsigned id) const
 
     return nullptr;
 }
+
+void TemplateGroup::replaceTileset(SharedTileset oldTileset, SharedTileset newTileset)
+{
+    if (!oldTileset)
+        return;
+
+    bool added = false;
+    if (mTilesets.contains(oldTileset)) {
+        mTilesets.replace(mTilesets.indexOf(oldTileset), newTileset);
+        added = true;
+    }
+
+    for (ObjectTemplate *objectTemplate : mTemplates)
+        objectTemplate->replaceTileset(oldTileset, newTileset);
+
+    if (added) {
+        TilesetManager *tilesetManager = TilesetManager::instance();
+        tilesetManager->addReference(newTileset);
+        tilesetManager->removeReference(oldTileset);
+    }
+}
