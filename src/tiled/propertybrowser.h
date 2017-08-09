@@ -152,6 +152,7 @@ private:
         TileProbabilityProperty,
         ColumnCountProperty,
         IdProperty,
+        TemplateInstanceProperty,
         CustomProperty
     };
 
