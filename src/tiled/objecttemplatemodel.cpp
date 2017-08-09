@@ -238,21 +238,40 @@ void ObjectTemplateModel::save(const TemplateGroup *templateGroup) const
     }
 }
 
+// Amend the old commit
 void ObjectTemplateModel::replaceTemplateGroup(TemplateGroup *oldTemplateGroup, TemplateGroup *newTemplateGroup)
 {
-    for (int i = 0; i < mTemplateDocuments.count(); ++i) {
-        TemplateGroupDocument *document = mTemplateDocuments.at(i);
-        if (document->templateGroup() == oldTemplateGroup) {
-
-            // this might be wrong, we didn't count the tmeplate of the other groups
-            beginInsertRows(QModelIndex(), i + 1, i + newTemplateGroup->templateCount());
-            document->setTemplateGroup(newTemplateGroup);
-            endInsertRows();
-            break;
+    bool old = false;
+    for (auto document : mTemplateDocuments) {
+        // It's already loaded by the map
+        if (document->fileName() == newTemplateGroup->fileName()) {
+            old = true;
+            for (int i = mTemplateDocuments.size() - 1; i >= 0; --i) {
+                if (mTemplateDocuments.at(i)->templateGroup() == oldTemplateGroup) {
+                    beginRemoveRows(QModelIndex(), i, i);
+                    delete mTemplateDocuments.at(i);
+                    mTemplateDocuments.removeAt(i);
+                    endRemoveRows();
+                }
+            }
         }
     }
 
-    TemplateManager::instance()->replace(oldTemplateGroup, newTemplateGroup);
+    // Replace the placeholder with new group
+    if (!old) {
+        for (int i = 0; i < mTemplateDocuments.count(); ++i) {
+            TemplateGroupDocument *document = mTemplateDocuments.at(i);
+            if (document->templateGroup() == oldTemplateGroup) {
+                // this might be wrong, we didn't count the tmeplate of the other groups
+                beginInsertRows(QModelIndex(), i + 1, i + newTemplateGroup->templateCount());
+                document->setTemplateGroup(newTemplateGroup);
+                endInsertRows();
+                break;
+            }
+        }
+        TemplateManager::instance()->replace(oldTemplateGroup, newTemplateGroup);
+    }
+
     emit templateGroupUpdated();
 //    delete oldTemplateGroup;
 }

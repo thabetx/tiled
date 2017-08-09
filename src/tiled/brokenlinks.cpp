@@ -664,10 +664,10 @@ void BrokenLinksWidget::tryFixLink(const BrokenLink &link)
                 QMessageBox::critical(window(), tr("Error Reading Template Group"), error);
                 return;
             }
-            ObjectTemplateModel::instance()->replaceTemplateGroup(link.templateGroup(), newTemplateGroup);
-        } else {
-            ObjectTemplateModel::instance()->replaceTemplateGroup(link.templateGroup(), newTemplateGroup);
         }
+
+        // Test
+        ObjectTemplateModel::instance()->replaceTemplateGroup(link.templateGroup(), newTemplateGroup);
 
         MapDocument *mapDocument = static_cast<MapDocument*>(document);
         int index = mapDocument->map()->templateGroups().indexOf(link.templateGroup());
