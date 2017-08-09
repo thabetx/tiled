@@ -146,3 +146,35 @@ void ChangeMapObjectsTile::changeTiles()
 
     emit mMapDocument->mapObjectModel()->objectsChanged(mMapObjects);
 }
+
+DetachObject::DetachObject(MapDocument *mapDocument,
+                           MapObject *mapObject)
+    : QUndoCommand(QCoreApplication::translate("Undo Commands",
+                                               "Detach Object",
+                                                nullptr))
+    , mMapDocument(mapDocument)
+    , mMapObject(mapObject)
+{
+    mTemplateRef = mMapObject->templateRef();
+    mProperties = mMapObject->properties();
+}
+
+void DetachObject::redo()
+{
+    // Merge the instance properties into the template properties
+    Properties newProperties = mMapObject->templateObject()->properties();
+    newProperties.merge(mMapObject->properties());
+    mMapObject->setProperties(newProperties);
+
+    mMapObject->setTemplateRef({nullptr, 0});
+    mMapObject->syncWithTemplate();
+    emit mMapDocument->mapObjectModel()->objectsChanged(QList<MapObject*>() << mMapObject);
+}
+
+void DetachObject::undo()
+{
+    mMapObject->setTemplateRef(mTemplateRef);
+    mMapObject->setProperties(mProperties);
+    mMapObject->syncWithTemplate();
+    emit mMapDocument->mapObjectModel()->objectsChanged(QList<MapObject*>() << mMapObject);
+}

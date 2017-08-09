@@ -74,6 +74,7 @@ private slots:
     void removeObjects();
     void resetTileSize();
     void saveSelectedObject();
+    void detachSelectedObjects();
     void changeTile();
 
     void flipHorizontally();

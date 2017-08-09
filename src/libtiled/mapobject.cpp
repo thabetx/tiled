@@ -264,7 +264,7 @@ MapObject *MapObject::clone() const
 
 const MapObject *MapObject::templateObject() const
 {
-    if (!mTemplateRef.templateGroup)
+    if (!isTemplateInstance())
         return nullptr;
 
     auto objectTemplate = mTemplateRef.templateGroup->findTemplate(mTemplateRef.templateId);
@@ -311,12 +311,12 @@ void MapObject::syncWithTemplate()
 
 bool MapObject::isTemplateInstance() const
 {
-    return templateRef().templateGroup;
+    return mTemplateRef.templateGroup;
 }
 
 TemplateGroup *MapObject::templateGroup() const
 {
-    return templateRef().templateGroup;
+    return mTemplateRef.templateGroup;
 }
 
 void MapObject::flipRectObject(const QTransform &flipTransform)

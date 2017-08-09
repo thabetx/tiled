@@ -208,6 +208,11 @@ void AbstractObjectTool::saveSelectedObject()
         mapDocument()->saveSelectedObject(name, groupIndex);
 }
 
+void AbstractObjectTool::detachSelectedObjects()
+{
+    mapDocument()->detachObjects(mapDocument()->selectedObjects());
+}
+
 void AbstractObjectTool::changeTile()
 {
     QList<MapObject*> tileObjects;
@@ -298,6 +303,13 @@ void AbstractObjectTool::showContextMenu(MapObjectItem *clickedObjectItem,
         if (cell.isEmpty() || cell.tileset()->isExternal())
             menu.addAction(tr("Save As Template"), this, SLOT(saveSelectedObject()));
     }
+
+    bool anyIsTemplateInstance = std::any_of(selectedObjects.begin(),
+                                             selectedObjects.end(),
+                                             [](MapObject *object) { return object->isTemplateInstance(); });
+
+    if (anyIsTemplateInstance)
+        menu.addAction(tr("Detach"), this, SLOT(detachSelectedObjects()));
 
     menu.addSeparator();
     menu.addAction(tr("Flip Horizontally"), this, SLOT(flipHorizontally()), QKeySequence(tr("X")));

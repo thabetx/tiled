@@ -111,5 +111,26 @@ private:
     QVector<bool> mOldChangeStates;
 };
 
+class DetachObject : public QUndoCommand
+{
+public:
+    /**
+     * Creates an undo command that detaches the given template instance from the template.
+     */
+    DetachObject(MapDocument *mapDocument,
+                 MapObject *mapObject);
+
+    void redo() override;
+    void undo() override;
+
+private:
+    void attach();
+    void detach();
+
+    MapDocument *mMapDocument;
+    MapObject *mMapObject;
+    TemplateRef mTemplateRef;
+    Properties mProperties;
+};
 } // namespace Internal
 } // namespace Tiled
