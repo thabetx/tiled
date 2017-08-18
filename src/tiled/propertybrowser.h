@@ -47,6 +47,7 @@ namespace Internal {
 class Document;
 class MapDocument;
 class TilesetDocument;
+class VariantEditorFactory;
 
 class PropertyBrowser : public QtTreePropertyBrowser
 {
@@ -153,6 +154,7 @@ private:
         ColumnCountProperty,
         IdProperty,
         TemplateInstanceProperty,
+        TemplateBaseProperty,
         CustomProperty
     };
 
@@ -169,6 +171,7 @@ private:
 
     void applyMapValue(PropertyId id, const QVariant &val);
     void applyMapObjectValue(PropertyId id, const QVariant &val);
+    void lockProperty(QtProperty *property, bool lock);
     QUndoCommand *applyMapObjectValueTo(PropertyId id, const QVariant &val, MapObject *mapObject);
     void applyLayerValue(PropertyId id, const QVariant &val);
     void applyTileLayerValue(PropertyId id, const QVariant &val);
@@ -210,6 +213,7 @@ private:
     QtVariantPropertyManager *mVariantManager;
     QtGroupPropertyManager *mGroupManager;
     QtProperty *mCustomPropertiesGroup;
+    VariantEditorFactory *mVariantEditorFactory;
 
     QHash<QtProperty *, PropertyId> mPropertyToId;
     QHash<PropertyId, QtVariantProperty *> mIdToProperty;

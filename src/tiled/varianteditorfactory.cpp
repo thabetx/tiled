@@ -22,6 +22,7 @@
 #include "varianteditorfactory.h"
 
 #include "fileedit.h"
+#include "mapobject.h"
 #include "textpropertyedit.h"
 #include "tilesetdocument.h"
 #include "tilesetparametersedit.h"
@@ -44,6 +45,7 @@ public:
 
 signals:
     void resetProperty(QtProperty *property);
+    void lockProperty(QtProperty *property);
 
 private slots:
     void buttonClicked();
@@ -77,6 +79,56 @@ void ResetWidget::buttonClicked()
     emit resetProperty(mProperty);
 }
 
+class LockWidget : public QWidget
+{
+    Q_OBJECT
+
+public:
+    LockWidget(QtProperty *property, QWidget *editor, bool locked, QWidget *parent = nullptr);
+
+signals:
+    void lockProperty(QtProperty *property, bool lock);
+
+private slots:
+    void buttonClicked();
+
+private:
+    QtProperty *mProperty;
+    QToolButton *mLockButton;
+    bool mLocked;
+    QIcon lockedIcon = QIcon(QLatin1String(":/images/16x16/locked.png"));
+    QIcon unlockedIcon = QIcon(QLatin1String(":/images/16x16/unlocked.png"));
+};
+
+LockWidget::LockWidget(QtProperty *property, QWidget *editor, bool locked, QWidget *parent)
+    : QWidget(parent)
+    , mProperty(property)
+    , mLockButton(new QToolButton(this))
+    , mLocked(locked)
+{
+    QHBoxLayout *layout = new QHBoxLayout(this);
+
+    mLockButton->setIcon(mLocked ? lockedIcon : unlockedIcon);
+
+    mLockButton->setIconSize(Utils::smallIconSize());
+    mLockButton->setAutoRaise(true);
+
+    layout->setMargin(0);
+    layout->setSpacing(0);
+    layout->addWidget(editor);
+    layout->addWidget(mLockButton);
+
+    connect(mLockButton, &QToolButton::clicked, this, &LockWidget::buttonClicked);
+}
+
+void LockWidget::buttonClicked()
+{
+    mLocked = !mLocked;
+
+    mLockButton->setIcon(mLocked ? lockedIcon : unlockedIcon);
+
+    emit lockProperty(mProperty, mLocked);
+}
 
 VariantEditorFactory::~VariantEditorFactory()
 {
@@ -165,6 +217,16 @@ QWidget *VariantEditorFactory::createEditor(QtVariantPropertyManager *manager,
         connect(resetWidget, &ResetWidget::resetProperty,
                 this, &VariantEditorFactory::resetProperty);
         editor = resetWidget;
+    }
+
+    // TODO: Handle graphical properties: X, Y, Width, Height, Rotation, Flipping
+    // TODO: Handle custom properties
+    if (mMapObject && mMapObject->isTemplateBase()) {
+        bool locked = mMapObject->propertyLocked(property->propertyName(), false);
+        LockWidget *lockWidget = new LockWidget(property, editor, locked, parent);
+        connect(lockWidget, &LockWidget::lockProperty,
+                this, &VariantEditorFactory::setPropertyLock);
+        editor = lockWidget;
     }
 
     return editor;

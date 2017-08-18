@@ -24,6 +24,9 @@
 #include <QtVariantEditorFactory>
 
 namespace Tiled {
+
+class MapObject;
+
 namespace Internal {
 
 class FileEdit;
@@ -48,8 +51,11 @@ public:
 
     ~VariantEditorFactory();
 
+    void setMapObject(const MapObject *mapObject);
+
 signals:
     void resetProperty(QtProperty *property);
+    void setPropertyLock(QtProperty *property, bool lock);
 
 protected:
     void connectPropertyManager(QtVariantPropertyManager *manager) override;
@@ -76,7 +82,12 @@ private:
 
     QMap<QtProperty *, QList<TextPropertyEdit *> > mCreatedTextPropertyEdits;
     QMap<TextPropertyEdit *, QtProperty *> mTextPropertyEditToProperty;
+
+    const MapObject *mMapObject;
 };
+
+inline void VariantEditorFactory::setMapObject(const MapObject *mapObject)
+{ mMapObject = mapObject; }
 
 } // namespace Internal
 } // namespace Tiled

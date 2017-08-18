@@ -74,10 +74,9 @@ PropertyBrowser::PropertyBrowser(QWidget *parent)
     , mVariantManager(new VariantPropertyManager(this))
     , mGroupManager(new QtGroupPropertyManager(this))
     , mCustomPropertiesGroup(nullptr)
+    , mVariantEditorFactory(new VariantEditorFactory(this))
 {
-    VariantEditorFactory *variantEditorFactory = new VariantEditorFactory(this);
-
-    setFactoryForManager(mVariantManager, variantEditorFactory);
+    setFactoryForManager(mVariantManager, mVariantEditorFactory);
     setResizeMode(ResizeToContents);
     setRootIsDecorated(false);
     setPropertiesWithoutValueMarked(true);
@@ -117,8 +116,11 @@ PropertyBrowser::PropertyBrowser(QWidget *parent)
     connect(mVariantManager, SIGNAL(valueChanged(QtProperty*,QVariant)),
             SLOT(valueChanged(QtProperty*,QVariant)));
 
-    connect(variantEditorFactory, &VariantEditorFactory::resetProperty,
+    connect(mVariantEditorFactory, &VariantEditorFactory::resetProperty,
             this, &PropertyBrowser::resetProperty);
+
+    connect(mVariantEditorFactory, &VariantEditorFactory::setPropertyLock,
+            this, &PropertyBrowser::lockProperty);
 
     connect(Preferences::instance(), &Preferences::objectTypesChanged,
             this, &PropertyBrowser::objectTypesChanged);
@@ -658,6 +660,16 @@ void PropertyBrowser::addMapObjectProperties()
         addProperty(ColorProperty, QVariant::Color, tr("Color"), groupProperty);
     }
 
+    // Disable locked builtin properties of template instances
+    if (mapObject->isTemplateInstance()) {
+        for (auto property : groupProperty->subProperties()) {
+            const PropertyId id = mPropertyToId.value(property);
+            if (mapObject->propertyLocked(property->propertyName(), id == CustomProperty)) {
+                property->setEnabled(false);
+            }
+        }
+    }
+
     addProperty(groupProperty);
 }
 
@@ -987,6 +999,21 @@ void PropertyBrowser::applyMapObjectValue(PropertyId id, const QVariant &val)
     }
 
     mDocument->undoStack()->endMacro();
+}
+
+void PropertyBrowser::lockProperty(QtProperty *property, bool lock)
+{
+    MapObject *mapObject = dynamic_cast<MapObject *>(object());
+    if (!mapObject)
+        return;
+
+    const PropertyId id = mPropertyToId.value(property);
+
+    mDocument->undoStack()->push(new LockTemplateProperty(mMapDocument,
+                                                          mapObject,
+                                                          property->propertyName(),
+                                                          lock,
+                                                          id == CustomProperty));
 }
 
 void PropertyBrowser::applyLayerValue(PropertyId id, const QVariant &val)
@@ -1380,6 +1407,8 @@ void PropertyBrowser::updateProperties()
 
     mUpdating = true;
 
+    mVariantEditorFactory->setMapObject(nullptr);
+
     switch (mObject->typeId()) {
     case Object::MapType: {
         const Map *map = static_cast<const Map*>(mObject);
@@ -1398,6 +1427,7 @@ void PropertyBrowser::updateProperties()
     }
     case Object::MapObjectType: {
         const MapObject *mapObject = static_cast<const MapObject*>(mObject);
+        mVariantEditorFactory->setMapObject(mapObject);
 
         const QString &type = mapObject->effectiveType();
         const auto typeColorGroup = mapObject->type().isEmpty() ? QPalette::Disabled
@@ -1606,6 +1636,7 @@ void PropertyBrowser::updateCustomProperties()
 
     QMapIterator<QString,QVariant> it(mCombinedProperties);
 
+    auto mapObject = static_cast<MapObject*>(mObject);
     while (it.hasNext()) {
         it.next();
         QtVariantProperty *property = addProperty(CustomProperty,
@@ -1614,6 +1645,12 @@ void PropertyBrowser::updateCustomProperties()
                                                   mCustomPropertiesGroup);
 
         property->setValue(it.value());
+
+        // Disable locked custom properties of template instances
+        const PropertyId id = mPropertyToId.value(property);
+        if (mapObject && mapObject->isTemplateInstance() && mapObject->propertyLocked(property->propertyName(), id == CustomProperty))
+            property->setEnabled(false);
+
         updateCustomPropertyColor(it.key());
     }
 
