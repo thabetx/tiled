@@ -178,3 +178,30 @@ void DetachObject::undo()
     mMapObject->syncWithTemplate();
     emit mMapDocument->mapObjectModel()->objectsChanged(QList<MapObject*>() << mMapObject);
 }
+
+LockTemplateProperty::LockTemplateProperty(MapDocument *mapDocument,
+                                           MapObject *mapObject,
+                                           QString propertyName,
+                                           bool locked,
+                                           bool customProperty)
+    : mMapDocument(mapDocument)
+    , mMapObject(mapObject)
+    , mPropertyName(propertyName)
+    , mLocked(locked)
+    , mCustomProperty(customProperty)
+{
+    if (locked)
+        setText(QCoreApplication::translate("Undo Commands",
+                                            "Lock Property"));
+    else
+        setText(QCoreApplication::translate("Undo Commands",
+                                            "Unlock Property"));
+}
+
+void LockTemplateProperty::swap()
+{
+    if (mMapObject->propertyLocked(mPropertyName, mCustomProperty))
+        mMapObject->unlockProperty(mPropertyName, mCustomProperty);
+    else
+        mMapObject->lockProperty(mPropertyName, mCustomProperty);
+}

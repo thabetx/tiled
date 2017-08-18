@@ -72,6 +72,31 @@ QSizeF TextData::textSize() const
     return fontMetrics.size(0, text);
 }
 
+void MapObject::lockProperty(const QString &propertyName, bool customProperty)
+{
+    customProperty ? mLockedCustomProperties.insert(propertyName) :
+                     mLockedProperties.insert(propertyName);
+}
+
+void MapObject::unlockProperty(const QString &propertyName, bool customProperty)
+{
+    customProperty ? mLockedCustomProperties.remove(propertyName) :
+                     mLockedProperties.remove(propertyName);
+}
+
+bool MapObject::propertyLocked(const QString &propertyName, bool customProperty) const
+{
+    return  customProperty ? mLockedCustomProperties.contains(propertyName) :
+                             mLockedProperties.contains(propertyName);
+}
+
+void MapObject::setLockedProperties(const QSet<QString> &lockedProperties) {
+    mLockedProperties.unite(lockedProperties);
+}
+
+void MapObject::setLockedCustomProperties(const QSet<QString> &lockedCustomProperties) {
+    mLockedCustomProperties.unite(lockedCustomProperties);
+}
 
 MapObject::MapObject():
     Object(MapObjectType),
@@ -82,7 +107,8 @@ MapObject::MapObject():
     mObjectGroup(nullptr),
     mRotation(0.0f),
     mVisible(true),
-    mChangedProperties(0)
+    mChangedProperties(0),
+    mTemplateBase(false)
 {
 }
 
@@ -100,7 +126,8 @@ MapObject::MapObject(const QString &name, const QString &type,
     mObjectGroup(nullptr),
     mRotation(0.0f),
     mVisible(true),
-    mChangedProperties(0)
+    mChangedProperties(0),
+    mTemplateBase(false)
 {
 }
 
@@ -259,6 +286,8 @@ MapObject *MapObject::clone() const
     o->setVisible(mVisible);
     o->setChangedProperties(mChangedProperties);
     o->setTemplateRef(templateRef());
+    o->mLockedProperties = mLockedProperties;
+    o->mLockedCustomProperties = mLockedCustomProperties;
     return o;
 }
 
@@ -307,6 +336,9 @@ void MapObject::syncWithTemplate()
 
     if (!propertyChanged(MapObject::VisibleProperty))
         setVisible(base->isVisible());
+
+    mLockedProperties = base->mLockedProperties;
+    mLockedCustomProperties = base->mLockedCustomProperties;
 }
 
 bool MapObject::isTemplateInstance() const

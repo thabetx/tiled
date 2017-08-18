@@ -270,6 +270,7 @@ void TemplatesDock::setTemplate(ObjectTemplate *objectTemplate)
         Map *map = new Map(orientation, 1, 1, 1, 1);
 
         mObject = objectTemplate->object()->clone();
+        mObject->markAsTemplateBase();
 
         if (mObject->isTileObject()) {
             map->addTileset(mObject->cell().tile()->sharedTileset());

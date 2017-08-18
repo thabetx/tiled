@@ -124,13 +124,33 @@ public:
     void undo() override;
 
 private:
-    void attach();
-    void detach();
-
     MapDocument *mMapDocument;
     MapObject *mMapObject;
     TemplateRef mTemplateRef;
     Properties mProperties;
 };
+
+class LockTemplateProperty : public QUndoCommand
+{
+public:
+    LockTemplateProperty(MapDocument *mapDocument,
+                         MapObject *mapObject,
+                         QString mPropertyName,
+                         bool locked,
+                         bool customProperty);
+
+    void undo() override { swap(); }
+    void redo() override { swap(); }
+
+private:
+    void swap();
+
+    MapDocument *mMapDocument;
+    MapObject *mMapObject;
+    QString mPropertyName;
+    bool mLocked;
+    bool mCustomProperty;
+};
+
 } // namespace Internal
 } // namespace Tiled

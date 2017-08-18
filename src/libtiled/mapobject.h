@@ -120,6 +120,26 @@ public:
 
     Q_DECLARE_FLAGS(ChangedProperties, Property)
 
+    /**
+     * These sets hold the names of locked properties,
+     * Locked properties are used only with templates
+     * and can only be changed through a template base
+     * enums weren't used to allow locking custom properties
+     * the names of the custom properties must be kept up to date in case of change
+     */
+    QSet<QString> mLockedProperties;
+    QSet<QString> mLockedCustomProperties;
+
+    void lockProperty(const QString &propertyName, bool customProperty);
+
+    void unlockProperty(const QString &propertyName, bool customProperty);
+
+    bool propertyLocked(const QString &propertyName, bool customProperty) const;
+
+    void setLockedProperties(const QSet<QString> &lockedProperties);
+
+    void setLockedCustomProperties(const QSet<QString> &lockedCustomProperties);
+
     MapObject();
 
     MapObject(const QString &name, const QString &type,
@@ -209,7 +229,14 @@ public:
 
     bool isTemplateInstance() const;
 
+    bool isTemplateBase() const;
+    void markAsTemplateBase();
+
     TemplateGroup *templateGroup() const;
+
+    QSet<QString> lockedProperties() const;
+
+    QSet<QString> lockedCustomProperties() const;
 
 private:
     void flipRectObject(const QTransform &flipTransform);
@@ -230,6 +257,7 @@ private:
     qreal mRotation;
     bool mVisible;
     ChangedProperties mChangedProperties;
+    bool mTemplateBase;
 };
 
 /**
@@ -476,6 +504,18 @@ inline void MapObject::setPropertyChanged(Property property, bool state)
 
 inline bool MapObject::propertyChanged(Property property) const
 { return mChangedProperties.testFlag(property); }
+
+inline bool MapObject::isTemplateBase() const
+{ return mTemplateBase; }
+
+inline void MapObject::markAsTemplateBase()
+{ mTemplateBase = true; }
+
+inline QSet<QString> MapObject::lockedProperties() const
+{ return mLockedProperties; }
+
+inline QSet<QString> MapObject::lockedCustomProperties() const
+{ return mLockedCustomProperties; }
 
 } // namespace Tiled
 
