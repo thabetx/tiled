@@ -580,6 +580,18 @@ MapObject *VariantToMapConverter::toMapObject(const QVariantMap &variantMap)
         object->setTemplateRef(mTidMapper.tidToTemplateRef(tid, ok));
     }
 
+    const QVariant lockedPropertiesVariant = variantMap[QLatin1String("lockedproperties")];
+    if (lockedPropertiesVariant.isValid()) {
+        for (const QVariant propertyNameVariant : lockedPropertiesVariant.toList())
+            object->lockProperty(propertyNameVariant.toString(), false);
+    }
+
+    const QVariant lockedCustomPropertiesVariant = variantMap[QLatin1String("lockedcustomproperties")];
+    if (lockedCustomPropertiesVariant.isValid()) {
+        for (const QVariant propertyNameVariant : lockedCustomPropertiesVariant.toList())
+            object->lockProperty(propertyNameVariant.toString(), true);
+    }
+
     object->setId(id);
 
     object->setPropertyChanged(MapObject::NameProperty, !name.isEmpty());

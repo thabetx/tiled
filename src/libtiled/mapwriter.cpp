@@ -102,6 +102,9 @@ private:
     void writeGroupLayer(QXmlStreamWriter &w, const GroupLayer &groupLayer);
     void writeProperties(QXmlStreamWriter &w,
                          const Properties &properties);
+    void writeLockedProperties(QXmlStreamWriter &w,
+                               const QSet<QString> &lockedProperties,
+                               const QSet<QString> &lockedCustomeProperties) ;
 
     QDir mMapDir;     // The directory in which the map is being saved
     GidMapper mGidMapper;
@@ -723,6 +726,11 @@ void MapWriterPrivate::writeObject(QXmlStreamWriter &w,
 
     writeProperties(w, mapObject.properties());
 
+    if (id == 0) {
+        writeLockedProperties(w, mapObject.lockedProperties(),
+                              mapObject.lockedCustomProperties());
+    }
+
     switch (mapObject.shape()) {
     case MapObject::Rectangle:
         break;
@@ -889,6 +897,34 @@ void MapWriterPrivate::writeProperties(QXmlStreamWriter &w,
     w.writeEndElement();
 }
 
+void MapWriterPrivate::writeLockedProperties(QXmlStreamWriter &w,
+                                             const QSet<QString> &lockedProperties,
+                                             const QSet<QString> &lockedCustomeProperties)
+{
+    if (!lockedProperties.isEmpty()) {
+        w.writeStartElement(QLatin1String("lockedproperties"));
+
+        for (auto propertyName : lockedProperties) {
+            w.writeStartElement(QLatin1String("property"));
+            w.writeAttribute(QLatin1String("name"), propertyName);
+            w.writeEndElement();
+        }
+
+        w.writeEndElement();
+    }
+
+    if (!lockedCustomeProperties.isEmpty()) {
+        w.writeStartElement(QLatin1String("lockedcustomproperties"));
+
+        for (auto propertyName : lockedCustomeProperties) {
+            w.writeStartElement(QLatin1String("property"));
+            w.writeAttribute(QLatin1String("name"), propertyName);
+            w.writeEndElement();
+        }
+
+        w.writeEndElement();
+    }
+}
 
 MapWriter::MapWriter()
     : d(new MapWriterPrivate)

@@ -128,6 +128,9 @@ private:
     Properties readProperties();
     void readProperty(Properties *properties);
 
+    QSet<QString> readLockedProperties();
+    QSet<QString> readLockedCustomProperties();
+
     MapReader *p;
 
     QString mError;
@@ -1000,6 +1003,10 @@ MapObject *MapReaderPrivate::readObject()
     while (xml.readNextStartElement()) {
         if (xml.name() == QLatin1String("properties")) {
             object->mergeProperties(readProperties());
+        } else if (xml.name() == QLatin1String("lockedproperties")) {
+            object->setLockedProperties(readLockedProperties());
+        } else if (xml.name() == QLatin1String("lockedcustomproperties")) {
+            object->setLockedCustomProperties(readLockedCustomProperties());
         } else if (xml.name() == QLatin1String("polygon")) {
             object->setPolygon(readPolygon());
             object->setShape(MapObject::Polygon);
@@ -1216,6 +1223,44 @@ void MapReaderPrivate::readProperty(Properties *properties)
     }
 
     properties->insert(propertyName, variant);
+}
+
+QSet<QString> MapReaderPrivate::readLockedProperties()
+{
+    Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("lockedproperties"));
+
+    QSet<QString> lockedProperties;
+
+    while (xml.readNextStartElement()) {
+        if (xml.name() == QLatin1String("property")) {
+            const QXmlStreamAttributes atts = xml.attributes();
+            lockedProperties.insert(atts.value(QLatin1String("name")).toString());
+            xml.skipCurrentElement();
+        } else {
+            readUnknownElement();
+        }
+    }
+
+    return lockedProperties;
+}
+
+QSet<QString> MapReaderPrivate::readLockedCustomProperties()
+{
+    Q_ASSERT(xml.isStartElement() && xml.name() == QLatin1String("lockedcustomproperties"));
+
+    QSet<QString> lockedCustomProperties;
+
+    while (xml.readNextStartElement()) {
+        if (xml.name() == QLatin1String("property")) {
+            const QXmlStreamAttributes atts = xml.attributes();
+            lockedCustomProperties.insert(atts.value(QLatin1String("name")).toString());
+        } else {
+            readUnknownElement();
+        }
+    }
+
+    return lockedCustomProperties;
+
 }
 
 

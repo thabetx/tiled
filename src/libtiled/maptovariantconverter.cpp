@@ -448,10 +448,10 @@ QVariant MapToVariantConverter::toVariant(const MapObject &object) const
     if (notTemplateInstance || object.propertyChanged(MapObject::TypeProperty))
         objectVariant[QLatin1String("type")] = type;
 
-
-    if (notTemplateInstance || object.propertyChanged(MapObject::CellProperty))
+    if (notTemplateInstance || object.propertyChanged(MapObject::CellProperty)) {
         if (!object.cell().isEmpty())
             objectVariant[QLatin1String("gid")] = mGidMapper.cellToGid(object.cell());
+    }
 
     if (id != 0) {
         objectVariant[QLatin1String("x")] = object.x();
@@ -468,6 +468,23 @@ QVariant MapToVariantConverter::toVariant(const MapObject &object) const
 
     if (notTemplateInstance || object.propertyChanged(MapObject::VisibleProperty))
         objectVariant[QLatin1String("visible")] = object.isVisible();
+
+    // Write locked properties for template base
+    if (id == 0) {
+        if (!object.lockedProperties().isEmpty()) {
+            QVariantList  lockedPropertiesVariant;
+            for (auto propertyName : object.lockedProperties())
+                lockedPropertiesVariant.append(propertyName);
+            objectVariant[QLatin1String("lockedproperties")] = lockedPropertiesVariant;
+        }
+
+        if (!object.lockedCustomProperties().isEmpty()) {
+            QVariantList lockedCustomPropertiesVariant;
+            for (auto propertyName : object.lockedCustomProperties())
+                lockedCustomPropertiesVariant.append(propertyName);
+            objectVariant[QLatin1String("lockedcustomproperties")] = lockedCustomPropertiesVariant;
+        }
+    }
 
     /* Polygons are stored in this format:
      *
